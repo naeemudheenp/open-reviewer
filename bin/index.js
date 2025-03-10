@@ -16,7 +16,7 @@ async function loadModules() {
 
 // Fetch values from environment variables
 const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
-const DEFAULT_PROMPT = process.env.DEFAULT_PROMPT || "You are an experienced senior code reviewer. Analyze the given code for quality, best practices, and improvements. Provide feedback only when necessary. Ensure that your response is formatted in HTML for clear presentation. The feedback should be concise, structured, and easily understandable, suitable for use as a code review comment. If changes are required, suggest them with a brief explanation. Otherwise, acknowledge well-written code.";
+const DEFAULT_PROMPT = process.env.DEFAULT_PROMPT;
 
 // Validate API key
 if (!GROQ_API_KEY) {
@@ -38,7 +38,7 @@ const analyzeCode = async (code, prompt) => {
       {
         model: process.env.GROQ_MODEL || "qwen-2.5-32b",
         messages: [
-          { role: "system", content: `You are a senior code reviewer. ${prompt}` },
+          { role: "system", content: `You are a senior code reviewer. ${prompt} . "You are an experienced senior code reviewer. Analyze the given code for quality, best practices, and improvements. Provide feedback only when necessary. Ensure that your response is formatted in HTML for clear presentation. The feedback should be concise, structured, and easily understandable, suitable for use as a code review comment. If changes are required, suggest them with a brief explanation. Otherwise, acknowledge well-written code. The response should be in HTML format. give proper heading and subheading.it should be properly spaced and formatted. it should be easy to read and understand.Give a score out of 10 for the code. Give proper spacing between each errors like each section."` },
           { role: "user", content: `Review this code:\n\n${code}` },
         ],
       },
@@ -72,7 +72,7 @@ const runAnalysis = async (options) => {
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h2 { color: #333; }
-        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 20px; overflow-x: auto; }
         .feedback { background: #e8f5e9; padding: 10px; border-left: 5px solid #4caf50; margin-top: 10px; }
       </style>
     </head>
@@ -84,10 +84,8 @@ const runAnalysis = async (options) => {
     const code = fs.readFileSync(file, "utf-8");
     console.log(chalk.yellow(`📂 Reviewing: ${file}`));
 
-    const feedback = await analyzeCode(code, options.prompt || DEFAULT_PROMPT);
-    console.log(chalk.green(`✅ Feedback for ${file}:
-${feedback}
-`));
+    const feedback = await analyzeCode(code, DEFAULT_PROMPT);
+
 
     htmlContent += `
       <h2>Feedback for ${file}</h2>
