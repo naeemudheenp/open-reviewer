@@ -2,6 +2,11 @@
   "name": "open-reviewer",
   "version": "1.0.0",
   "description": "AI-powered code reviewer",
+  "author": "Naeemudheen P",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naeemudheenp"
+  },
   "bin": {
     "open-reviewer": "./bin/index.js"
   },
