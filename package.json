@@ -4,6 +4,7 @@
   "description": "AI-powered code reviewer",
   "author": "Naeemudheen P",
   "license": "MIT",
+  "type": "module",
   "keywords": [
     "code-review",
     "AI",

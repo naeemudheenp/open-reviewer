@@ -1,11 +1,13 @@
+#!/usr/bin/env node
 
+import fs from "fs-extra";
+import path from "path";
+import { glob } from "glob";
 
-const fs = require("fs-extra");
-const path = require("path");
-const glob = require("glob");
-const axios = require("axios");
-const { hideBin } = require("yargs/helpers");
-const yargs = require("yargs");
+import axios from "axios";
+import { hideBin } from "yargs/helpers";
+import yargs from "yargs";
+
 
 
 async function loadModules() {
