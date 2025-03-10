@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "description": "AI-powered code reviewer",
   "author": "Naeemudheen P",
+  "license": "MIT",
+  "keywords": [
+    "code-review",
+    "AI",
+    "CLI",
+    "ai reviewer"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/naeemudheenp"
