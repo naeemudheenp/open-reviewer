@@ -3,11 +3,10 @@
 import fs from "fs-extra";
 import path from "path";
 import { glob } from "glob";
-
 import axios from "axios";
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs";
-
+import 'dotenv/config';
 
 
 async function loadModules() {
@@ -15,44 +14,36 @@ async function loadModules() {
   return { chalk };
 }
 
+// Fetch values from environment variables
+const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
+const DEFAULT_PROMPT = process.env.DEFAULT_PROMPT || "You are an experienced senior code reviewer. Analyze the given code for quality, best practices, and improvements. Provide feedback only when necessary. Ensure that your response is formatted in HTML for clear presentation. The feedback should be concise, structured, and easily understandable, suitable for use as a code review comment. If changes are required, suggest them with a brief explanation. Otherwise, acknowledge well-written code.";
 
-const configFilePath = path.join(process.cwd(), "open-reviewer-config.json");
-let GROQ_API_KEY = "";
-let DEFAULT_PROMPT = "Check for code quality and improvements.";
-
-if (fs.existsSync(configFilePath)) {
-  try {
-    const config = fs.readJsonSync(configFilePath);
-    GROQ_API_KEY = config.apiKey || "";
-    DEFAULT_PROMPT = `${config.prompt}. Make sure the repsponse can be used as a code review comment.it should be esaily understandable.Only suggest code changes if necessary.Also the response should be in html format.`;
-  } catch (error) {
-    console.error("❌ Error reading config file:", error.message);
-    process.exit(1);
-  }
-} else {
-  console.warn("⚠️ Config file 'open-reviewer-config.json' not found. Please create it with API key and prompt.");
+// Validate API key
+if (!GROQ_API_KEY) {
+  console.error("❌ Missing Groq API Key. Please set GROQ_API_KEY in your environment variables.");
   process.exit(1);
 }
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
+// Scan project for files
+const scanProject = (dir) =>
+  glob.sync(`${dir}/**/*.{js,jsx,ts,tsx}`, { ignore: ["node_modules/**", "dist/**", ".env"] });
 
-const scanProject = (dir) => glob.sync(`${dir}/**/*.{js,jsx,ts,tsx}`, { ignore: ["node_modules/**", "dist/**", ".env", "open-reviewer-config.json"] });
-
-
+// Analyze code with AI
 const analyzeCode = async (code, prompt) => {
   try {
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: "qwen-2.5-32b",
+        model: process.env.GROQ_MODEL || "qwen-2.5-32b",
         messages: [
           { role: "system", content: `You are a senior code reviewer. ${prompt}` },
-          { role: "user", content: `Review this code:\n\n${code}` }
-        ]
+          { role: "user", content: `Review this code:\n\n${code}` },
+        ],
       },
       {
-        headers: { Authorization: `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" }
+        headers: { Authorization: `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
       }
     );
 
@@ -63,16 +54,11 @@ const analyzeCode = async (code, prompt) => {
   }
 };
 
-
+// Run the analysis
 const runAnalysis = async (options) => {
   const { chalk } = await loadModules();
-
-  if (!GROQ_API_KEY) {
-    console.error(chalk.red("❌ Missing Groq API Key in 'open-reviewer-config.json'."));
-    process.exit(1);
-  }
-
   const files = scanProject(process.cwd());
+
   console.log(chalk.blue(`🔍 Scanning ${files.length} files...`));
 
   const reportFilePath = path.join(process.cwd(), "review_report.html");
@@ -105,7 +91,6 @@ ${feedback}
 
     htmlContent += `
       <h2>Feedback for ${file}</h2>
-
       <div class="feedback">${feedback}</div>
     `;
   }
@@ -115,14 +100,12 @@ ${feedback}
   console.log(chalk.blue(`📄 Review report saved to: ${reportFilePath}`));
 };
 
-
-
+// CLI setup
 yargs(hideBin(process.argv))
   .command(
     "review",
     "Analyze the codebase using AI",
-    (yargs) =>
-      yargs.option("prompt", { alias: "p", type: "string", describe: "Custom review criteria" }),
+    (yargs) => yargs.option("prompt", { alias: "p", type: "string", describe: "Custom review criteria" }),
     runAnalysis
   )
   .demandCommand()
